@@ -65,28 +65,25 @@ const App = () => {
     };
   }, []);
 
-  return (
-    <div style={{ textAlign: "center", padding: "2rem", fontFamily: "Arial, sans-serif" }}>
-      <img src="https://res.cloudinary.com/dzg9ysvfy/image/upload/v1753788269/MUNERA_qao0gq.png" alt="MUNERA Logo" style={{ width: "100px", marginBottom: "10px" }} />
-      <h1 style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>MUNERA Scanner</h1>
+return (
+  <div style={{ textAlign: "center", padding: "2rem" }}>
+    <img src="https://res.cloudinary.com/dzg9ysvfy/image/upload/v1753788269/MUNERA_qao0gq.png" alt="MUNERA Logo" style={{ width: "100px", marginBottom: "10px" }} />
+    <h1 style={{ fontSize: "24px" }}>MUNERA Scanner</h1>
+    <div
+      id={qrCodeRegionId}
+      style={{
+        width: "90vw",
+        maxWidth: "400px",
+        margin: "auto",
+        aspectRatio: "1",
+        borderRadius: "12px",
+        overflow: "hidden",
+      }}
+    />
+    <p style={{ fontSize: "16px", color: statusColor, marginTop: "1rem" }}>{status}</p>
+  </div>
+);
 
-      <div
-        id={qrCodeRegionId}
-        style={{
-          width: "300px",
-          height: "300px",
-          margin: "20px auto",
-          border: "2px solid #ddd",
-          borderRadius: "10px",
-        }}
-      ></div>
-
-      <p style={{ color: statusColor, fontWeight: "bold", fontSize: "1rem" }}>{status}</p>
-      <p style={{ marginTop: "40px", fontSize: "0.9rem", color: "#666" }}>
-        📍 NYU Abu Dhabi — Dec 2025
-      </p>
-    </div>
-  );
 };
 
 export default App;
