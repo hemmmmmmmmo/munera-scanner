@@ -9,12 +9,20 @@ const App = () => {
   useEffect(() => {
     async function startScanner() {
       try {
-        html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices || devices.length === 0) {
+          setStatus("❌ No camera devices found");
+          return;
+        }
 
+        // Prefer back camera if available
+        const backCam = devices.find((d) => d.label.toLowerCase().includes("back")) || devices[0];
+
+        html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
         const config = { fps: 10, qrbox: 250 };
 
         await html5QrCodeRef.current.start(
-          { facingMode: "environment" }, // 👈 Force back camera
+          backCam.id, // ✅ now using valid string camera ID
           config,
           async (decodedText) => {
             setStatus("🔍 Scanned! Processing...");
@@ -27,17 +35,13 @@ const App = () => {
               });
 
               const data = await res.json();
-              if (res.ok) {
-                setStatus(`✅ ${data.message}`);
-              } else {
-                setStatus(`❌ ${data.error || "Error"}`);
-              }
-            } catch (err) {
+              setStatus(res.ok ? `✅ ${data.message}` : `❌ ${data.error || "Error"}`);
+            } catch {
               setStatus("❌ Failed to connect to server");
             }
           },
           (errorMessage) => {
-            // Ignore continuous scan errors silently
+            // Optional: you can log scan errors here
           }
         );
       } catch (err) {
