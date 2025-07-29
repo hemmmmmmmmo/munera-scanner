@@ -68,7 +68,7 @@ const App = () => {
 return (
   <div style={{ textAlign: "center", padding: "2rem" }}>
     <img src="https://res.cloudinary.com/dzg9ysvfy/image/upload/v1753788269/MUNERA_qao0gq.png" alt="MUNERA Logo" style={{ width: "100px", marginBottom: "10px" }} />
-    <h1 style={{ fontSize: "24px" }}>MUNERA Scanner</h1>
+    <h1 style={{ fontSize: "24px" }}>MUNERA QR Scanner</h1>
     <div
       id={qrCodeRegionId}
       style={{
