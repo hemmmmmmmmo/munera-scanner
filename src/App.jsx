@@ -9,41 +9,37 @@ const App = () => {
   useEffect(() => {
     async function startScanner() {
       try {
-        const devices = await Html5Qrcode.getCameras();
+        html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
 
-        if (devices && devices.length) {
-          const cameraId = devices[0].id;
-          html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
-          html5QrCodeRef.current.start(
-            cameraId,
-            { fps: 10, qrbox: 250 },
-            async (decodedText) => {
-              setStatus("🔍 Scanned! Processing...");
+        const config = { fps: 10, qrbox: 250 };
 
-              try {
-                const res = await fetch("https://munera-attendance-backend.onrender.com/scan", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ qr: decodedText }),
-                });
+        await html5QrCodeRef.current.start(
+          { facingMode: "environment" }, // 👈 Force back camera
+          config,
+          async (decodedText) => {
+            setStatus("🔍 Scanned! Processing...");
 
-                const data = await res.json();
-                if (res.ok) {
-                  setStatus(`✅ ${data.message}`);
-                } else {
-                  setStatus(`❌ ${data.error || "Error"}`);
-                }
-              } catch (err) {
-                setStatus("❌ Failed to connect to server");
+            try {
+              const res = await fetch("https://munera-attendance-backend.onrender.com/scan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ qr: decodedText }),
+              });
+
+              const data = await res.json();
+              if (res.ok) {
+                setStatus(`✅ ${data.message}`);
+              } else {
+                setStatus(`❌ ${data.error || "Error"}`);
               }
-            },
-            (errorMessage) => {
-              // ignore scan errors
+            } catch (err) {
+              setStatus("❌ Failed to connect to server");
             }
-          );
-        } else {
-          setStatus("❌ No camera devices found");
-        }
+          },
+          (errorMessage) => {
+            // Ignore continuous scan errors silently
+          }
+        );
       } catch (err) {
         console.error("Camera access error:", err);
         setStatus(`❌ Camera error: ${err.message || err}`);
