@@ -52,8 +52,10 @@ const App = () => {
         }
       )
       .catch((err) => {
-        setStatus("❌ Camera error");
-      });
+  console.error("Camera error:", err);
+  setStatus("❌ Camera error: " + err.message);
+});
+
 
     return () => {
       html5QrCodeRef.current?.stop().then(() => {
