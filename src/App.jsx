@@ -25,6 +25,7 @@ const App = () => {
             aspectRatio: 1.0,
           },
           async (decodedText) => {
+            console.log("SCANNED TEXT:", decodedText);
             setStatus("🔍 Scanned! Processing...");
             setStatusColor("orange");
 
