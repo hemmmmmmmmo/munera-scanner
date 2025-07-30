@@ -7,67 +7,75 @@ const App = () => {
   const [status, setStatus] = useState("Waiting to scan...");
   const [statusColor, setStatusColor] = useState("gray");
 
-useEffect(() => {
-  async function startScanner() {
-    try {
-      const devices = await Html5Qrcode.getCameras();
-      if (!devices || devices.length === 0) throw new Error("No camera found");
+  useEffect(() => {
+    async function startScanner() {
+      try {
+        const devices = await Html5Qrcode.getCameras();
+        if (!devices || devices.length === 0) throw new Error("No camera found");
 
-      // ✅ Try to get the wide back camera explicitly
-      const backCamera =
-        devices.find(d => /back|rear|wide/i.test(d.label)) || devices[0];
+        const backCamera =
+          devices.find(d => /back|rear|wide/i.test(d.label)) || devices[0];
 
-      html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
-      await html5QrCodeRef.current.start(
-        backCamera.id,
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        async (decodedText) => {
-          setStatus("🔍 Scanned! Processing...");
-          setStatusColor("orange");
+        html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
+        await html5QrCodeRef.current.start(
+          backCamera.id,
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
+          async (decodedText) => {
+            setStatus("🔍 Scanned! Processing...");
+            setStatusColor("orange");
 
-          try {
-            const res = await fetch("https://munera-attendance-backend.onrender.com/scan", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ qr: decodedText }),
-            });
+            try {
+              // ✅ Extract ID from URL (e.g. ?id=DA-001)
+              const url = new URL(decodedText);
+              const id = url.searchParams.get("id");
 
-            const data = await res.json();
-            if (res.ok) {
-              setStatus(`✅ ${data.message}`);
-              setStatusColor("green");
-            } else {
-              setStatus(`❌ ${data.error || "Error"}`);
+              if (!id) {
+                setStatus("❌ Invalid QR code");
+                setStatusColor("red");
+                return;
+              }
+
+              const res = await fetch("https://munera-attendance-backend.onrender.com/scan", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, scannedBy: "MUNERA Staff" }),
+              });
+
+              const data = await res.json();
+              if (res.ok) {
+                setStatus(`✅ ${data.message}`);
+                setStatusColor("green");
+              } else {
+                setStatus(`❌ ${data.error || "Error"}`);
+                setStatusColor("red");
+              }
+            } catch {
+              setStatus("❌ Failed to connect to server");
               setStatusColor("red");
             }
-          } catch {
-            setStatus("❌ Failed to connect to server");
-            setStatusColor("red");
+          },
+          (err) => {
+            console.warn("Scan error:", err);
           }
-        },
-        (err) => {
-          console.warn("Scan error:", err);
-        }
-      );
-    } catch (err) {
-      setStatus("❌ Camera error: " + (err?.message || "Unknown"));
-      setStatusColor("red");
+        );
+      } catch (err) {
+        setStatus("❌ Camera error: " + (err?.message || "Unknown"));
+        setStatusColor("red");
+      }
     }
-  }
 
-  startScanner();
+    startScanner();
 
-  return () => {
-    html5QrCodeRef.current?.stop().then(() => {
-      html5QrCodeRef.current?.clear();
-    });
-  };
-}, []);
-
+    return () => {
+      html5QrCodeRef.current?.stop().then(() => {
+        html5QrCodeRef.current?.clear();
+      });
+    };
+  }, []);
 
   return (
     <div style={{ textAlign: "center", padding: "2rem" }}>
