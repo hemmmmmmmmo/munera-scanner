@@ -11,17 +11,18 @@ const App = () => {
     async function startScanner() {
       try {
         const devices = await Html5Qrcode.getCameras();
-        if (!devices || devices.length === 0) {
-          throw new Error("No camera devices found");
-        }
+        if (!devices || devices.length === 0) throw new Error("No camera found");
 
-        // Prefer back camera (usually the last one)
         const cameraId = devices[devices.length - 1].id;
 
         html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
         await html5QrCodeRef.current.start(
           cameraId,
-          { fps: 10, qrbox: { width: 250, height: 250 } },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0,
+          },
           async (decodedText) => {
             setStatus("🔍 Scanned! Processing...");
             setStatusColor("orange");
@@ -41,20 +42,18 @@ const App = () => {
                 setStatus(`❌ ${data.error || "Error"}`);
                 setStatusColor("red");
               }
-            } catch (err) {
+            } catch {
               setStatus("❌ Failed to connect to server");
               setStatusColor("red");
             }
           },
           (err) => {
-            // optional: show scan error
             console.warn("Scan error:", err);
           }
         );
       } catch (err) {
-        setStatus("❌ Camera error: " + (err?.message || "Unknown error"));
+        setStatus("❌ Camera error: " + (err?.message || "Unknown"));
         setStatusColor("red");
-        console.error(err);
       }
     }
 
@@ -75,18 +74,22 @@ const App = () => {
         style={{ width: "100px", marginBottom: "10px" }}
       />
       <h1 style={{ fontSize: "24px" }}>MUNERA QR Scanner</h1>
+
       <div
         id={qrCodeRegionId}
         style={{
-          width: "90vw",
+          width: "100%",
           maxWidth: "400px",
-          margin: "auto",
-          aspectRatio: "1",
+          margin: "0 auto",
           borderRadius: "12px",
           overflow: "hidden",
+          aspectRatio: "1/1",
         }}
       />
-      <p style={{ fontSize: "16px", color: statusColor, marginTop: "1rem" }}>{status}</p>
+
+      <p style={{ fontSize: "16px", color: statusColor, marginTop: "1rem" }}>
+        {status}
+      </p>
     </div>
   );
 };
