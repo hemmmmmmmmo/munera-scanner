@@ -29,9 +29,14 @@ const App = () => {
             setStatusColor("orange");
 
             try {
-              // ✅ Extract ID from URL (e.g. ?id=DA-001)
-              const url = new URL(decodedText);
-              const id = url.searchParams.get("id");
+              // ✅ Try parsing URL safely
+              let id;
+              try {
+                const url = new URL(decodedText);
+                id = url.searchParams.get("id");
+              } catch {
+                id = null;
+              }
 
               if (!id) {
                 setStatus("❌ Invalid QR code");
@@ -53,7 +58,8 @@ const App = () => {
                 setStatus(`❌ ${data.error || "Error"}`);
                 setStatusColor("red");
               }
-            } catch {
+            } catch (err) {
+              console.error("Fetch error:", err);
               setStatus("❌ Failed to connect to server");
               setStatusColor("red");
             }
