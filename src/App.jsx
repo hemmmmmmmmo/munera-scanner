@@ -21,7 +21,7 @@ const App = () => {
           backCamera.id,
           {
             fps: 10,
-            qrbox: { width: 300, height: 300 },
+            qrbox: { width: 200, height: 300 },
 aspectRatio: 1.0,
 disableFlip: true,
 experimentalFeatures: {
