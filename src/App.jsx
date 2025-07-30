@@ -8,53 +8,45 @@ const App = () => {
   const [statusColor, setStatusColor] = useState("gray");
 
   useEffect(() => {
-    async function startScanner() {
-      try {
-        const devices = await Html5Qrcode.getCameras();
-        if (devices && devices.length) {
-          const cameraId = devices[0].id;
-          html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
-          html5QrCodeRef.current.start(
-            cameraId,
-            { fps: 10, qrbox: 250 },
-            async (decodedText) => {
-              setStatus("🔍 Scanned! Processing...");
-              setStatusColor("orange");
+async function startScanner() {
+  try {
+    html5QrCodeRef.current = new Html5Qrcode(qrCodeRegionId);
 
-              try {
-                const res = await fetch("https://munera-attendance-backend.onrender.com/scan", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ qr: decodedText }),
-                });
+    await html5QrCodeRef.current.start(
+      { facingMode: "environment" }, // 👈 force back cam
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      async (decodedText) => {
+        setStatus("🔍 Scanned! Processing...");
+        setStatusColor("orange");
 
-                const data = await res.json();
-                if (res.ok) {
-                  setStatus(`✅ ${data.message}`);
-                  setStatusColor("green");
-                } else {
-                  setStatus(`❌ ${data.error || "Error"}`);
-                  setStatusColor("red");
-                }
-              } catch (err) {
-                setStatus("❌ Failed to connect to server");
-                setStatusColor("red");
-              }
-            },
-            (errorMessage) => {
-              // ignore scan errors
-            }
-          );
-        } else {
-          setStatus("❌ No camera devices found");
+        try {
+          const res = await fetch("https://munera-attendance-backend.onrender.com/scan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ qr: decodedText }),
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            setStatus(`✅ ${data.message}`);
+            setStatusColor("green");
+          } else {
+            setStatus(`❌ ${data.error || "Error"}`);
+            setStatusColor("red");
+          }
+        } catch (err) {
+          setStatus("❌ Failed to connect to server");
           setStatusColor("red");
         }
-      } catch (err) {
-        console.error("Camera access error:", err);
-        setStatus(`❌ Camera error: ${err.message || err}`);
-        setStatusColor("red");
-      }
-    }
+      },
+      (err) => {} // ignore scan errors
+    );
+  } catch (err) {
+    setStatus("❌ Camera error: " + err.message);
+    setStatusColor("red");
+  }
+}
+
 
     startScanner();
 
